@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Toaster } from "sonner";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { SessionProvider } from "@/providers/session-provider";
 
 export const metadata: Metadata = {
-  title: "Prabisha Project",
-  description: "This project is a Prabisha Consultancy intiative",
+  title: "Prabisha Digital Marketing Automation",
+  description: "Automate your digital marketing with Prabisha's powerful content planning, scheduling, and publishing tools.",
 };
 
 export default function RootLayout({
@@ -20,9 +22,12 @@ export default function RootLayout({
       <body
         className={`antialiased`}
        suppressHydrationWarning={true}>
-        <SessionProvider>
-          {children}
-        </SessionProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <SessionProvider>
+            <Toaster richColors position="top-right" closeButton />
+            {children}
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

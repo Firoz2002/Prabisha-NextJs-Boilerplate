@@ -15,10 +15,6 @@ export const authOptions: AuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID as string,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET as string,
-    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -41,12 +37,20 @@ export const authOptions: AuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name;
+        token.role = user.role;
+        token.image = user.image;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.role = token.role;
+        session.user.image = token.image;
+        session.user.email = token.email;
       }
       return session;
     },
@@ -97,7 +101,9 @@ async function handleRegistration(credentials: Record<"name" | "email" | "passwo
   return {
     id: user.id,
     name: user.name,
+    role: user.role,
     email: user.email,
+    image: user.image,
   };
 }
 
@@ -128,6 +134,8 @@ async function handleLogin(credentials: Record<"email" | "password", string> | u
   return {
     id: user.id,
     name: user.name,
+    role: user.role,
+    image: user.image,
     email: user.email,
   };
 }

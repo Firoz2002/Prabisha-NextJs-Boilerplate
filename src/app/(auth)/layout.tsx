@@ -10,7 +10,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      router.push('/posts/calendar');
+      if(session.user.role === "ADMIN") {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/user/dashboard');
+      }
     }
   }, [session, status, router]);
 
