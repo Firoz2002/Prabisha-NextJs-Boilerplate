@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 
 import AppSidebar from '@/components/layout/AppSidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import AppHeader from '@/components/layout/AppHeader';
+import AppHeader from '@/components/layout/app-header';
 
 export default async function UserLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession();

@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,10 +10,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BillingType {
+  Monthly
+  Yearly
+}
 
-enum Role {
-  USER
-  ADMIN
+enum SubscriptionStatus {
+  Active
+  Inactive
+  Cancelled
+  Expired
+}
+
+enum ThemeMode {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum Language {
+  EN
+  HI
+  FR
+  ES
 }
 
 model Account {
@@ -54,16 +70,199 @@ model Session {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   name          String?
   image         String?
   password      String?
-  role          Role           @default(USER)
+  roleId        String?
+  role          Role?    @relation(fields: [roleId], references: [id])
   emailVerified DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  language      Language? @default(EN)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  blogs         Blog[]
+  uploads       Media[]
   accounts      Account[]
   sessions      Session[]
+  subscription  UserSubscription[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Theme {
+  id              String   @id @default(cuid())
+  themeName       String
+  primaryColor    String
+  secondaryColor  String
+  tertiaryColor   String
+  font            String
+  logoUrl         String?
+  faviconUrl      String?
+  backgroundColor String?
+  textColor       String?
+  mode            ThemeMode @default(LIGHT)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model HeaderItem {
+  id              String   @id @default(cuid())
+  label           String
+  href            String
+  icon            String?
+  subHeaderItems  SubHeaderItem[]
+  position        Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SubHeaderItem {
+  id              String   @id @default(cuid())
+  label           String
+  href            String
+  headerItemId    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  headerItem      HeaderItem @relation(fields: [headerItemId], references: [id])
+}
+
+model SidebarItem {
+  id              String   @id @default(cuid())
+  label           String
+  href            String
+  icon            String?
+  position        Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CarouselItem {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  imageUrl        String
+  buttonLabel     String
+  buttonHref      String
+  position        Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model FooterItem {
+  id              String   @id @default(cuid())
+  label           String
+  href            String
+  icon            String?
+  position        Int
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model SubscriptionPlan {
+  id              Int                 @id @default(autoincrement())
+  name            String
+  tagline         String?
+  pricing         Json                             
+  badge           String?             
+  features        Json  
+  billing         BillingType         @default(Monthly)     
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  subscriptions UserSubscription[]
+}
+
+model UserSubscription {
+  id           Int                @id @default(autoincrement())
+  user         User               @relation(fields: [userId], references: [id])
+  userId       String
+  plan         SubscriptionPlan   @relation(fields: [planId], references: [id])
+  planId       Int
+  status       SubscriptionStatus @default(Active)
+  startsAt     DateTime
+  endsAt       DateTime
+  createdAt    DateTime           @default(now())
+
+  @@index([userId, status]) 
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  pageAccess  RolePageAccess[]
+  users       User[]
+}
+
+model Pages {
+  id          String           @id @default(cuid())
+  name        String
+  path        String           @unique
+  slug        String
+  displayName String
+  isProtected Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  roleAccess  RolePageAccess[]
+}
+
+model RolePageAccess {
+  roleId    String
+  pageId    String
+  hasAccess Boolean @default(true)
+  page      Pages   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, pageId])
+  @@index([pageId], map: "RolePageAccess_pageId_fkey")
+}
+
+model Blog {
+  id        Int   @id @default(autoincrement())
+  banner    String
+  title     String
+  slug      String   @unique
+  content   String   @db.LongText
+  tags      Json
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  id                String   @id @default(cuid())
+  siteName          String
+  domain            String
+  supportEmail      String?
+  whatsappNumber    String?
+  googleAnalyticsId String?
+  metaPixelId       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Media {
+  id          String   @id @default(cuid())
+  url         String
+  altText     String?
+  type        String
+  size        Int?
+  createdAt   DateTime @default(now())
+  uploadedBy  User?    @relation(fields: [uploadedById], references: [id])
+  uploadedById String?
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

@@ -11,6 +11,7 @@ import { User, Mail, Key, RefreshCcw, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import ThemeToggle from "@/components/featuers/theme-toggle"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -98,7 +99,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
-      <div className="max-w-4xl w-full rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden grid lg:grid-cols-2 bg-white dark:bg-slate-900 backdrop-blur-sm">
+      <div className="relative max-w-4xl w-full rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden grid lg:grid-cols-2 bg-white dark:bg-slate-900 backdrop-blur-sm">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+
         {/* Left Pane */}
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 text-white p-8 flex flex-col items-center justify-center relative">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -106,6 +111,8 @@ export default function RegisterPage() {
             <div className="absolute bottom-8 right-8 w-24 h-24 bg-white/20 rounded-full blur-2xl"></div>
           </div>
           <div className="z-10 text-center space-y-3">
+            <h1 className="text-5xl font-bold"> project_name </h1>
+            <h2 className="text-2xl font-bold"> By Prabsiha Consulting </h2>
             <div className="backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto">
               <Image src="/icons/logo.png" alt="Logo" width={80} height={80} unoptimized />
             </div>
@@ -122,7 +129,7 @@ export default function RegisterPage() {
               <p className="text-xs text-muted-foreground">Enter your details to create an account</p>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-2" onSubmit={handleSubmit}>
               {/* Full Name */}
               <div>
                 <label htmlFor="fullName" className="text-xs font-medium text-slate-700 dark:text-slate-300">

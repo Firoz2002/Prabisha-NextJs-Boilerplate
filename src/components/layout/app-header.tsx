@@ -18,6 +18,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
+import ThemeToggle from '../featuers/theme-toggle';
+import GoogleTranslate from '../featuers/google-translate';
 
 interface AppHeaderProps {
   user: {
@@ -72,24 +74,6 @@ export default function AppHeader({ user }: AppHeaderProps) {
     signOut({
       callbackUrl: '/login',
     });
-  };
-
-  const navigateToResult = (type: string, id: string) => {
-    switch (type) {
-      case 'post':
-        router.push(`/posts/${id}`);
-        break;
-      case 'media':
-        router.push(`/media/${id}`);
-        break;
-      case 'brand':
-        router.push(`/brands/${id}`);
-        break;
-      default:
-        break;
-    }
-    setSearchQuery('');
-    setSearchOpen(false);
   };
 
   if (!user) {
@@ -215,14 +199,8 @@ export default function AppHeader({ user }: AppHeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="relative hover:bg-accent"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            <Sun className="w-5 h-5" />
-          </Button>
+          <ThemeToggle />
+          <GoogleTranslate />
 
           {/* User Menu */}
           <DropdownMenu>
