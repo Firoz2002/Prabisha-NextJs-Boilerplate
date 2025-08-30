@@ -1,25 +1,26 @@
 "use client";
-import { useTheme } from 'next-themes';
-import { signOut } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
-import React, { useCallback, useRef, useState } from 'react';
-import { Bell, Search, LogOut, X, Plus, Sun } from 'lucide-react';
+import { useTheme } from "next-themes";
+import { signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useCallback, useRef, useState } from "react";
+import { Bell, Search, LogOut, X, Plus, Sun } from "lucide-react";
 
-import { Input } from '../ui/input';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
-import { Skeleton } from '../ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from '../ui/dropdown-menu';
-import ThemeToggle from '../featuers/theme-toggle';
-import GoogleTranslate from '../featuers/google-translate';
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import ThemeToggle from "../featuers/theme-toggle";
+import GoogleTranslate from "../featuers/google-translate";
+import Microphone from "../featuers/microphone";
 
 interface AppHeaderProps {
   user: {
@@ -35,19 +36,28 @@ export default function AppHeader({ user }: AppHeaderProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [microphoneTranscript, setMicrophoneTranscript] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activePage, setActivePage] = useState('Dashboard');
+  const [activePage, setActivePage] = useState("Dashboard");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
   };
 
+  // Sync microphone transcript with search query when it changes
+  React.useEffect(() => {
+    if (microphoneTranscript.length > 0) {
+      setSearchQuery(microphoneTranscript[microphoneTranscript.length - 1]);
+      setMicrophoneTranscript([]); // Clear transcript after using it
+    }
+  }, [microphoneTranscript]);
+
   const clearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     if (searchInputRef.current) {
       searchInputRef.current.focus();
     }
@@ -55,12 +65,12 @@ export default function AppHeader({ user }: AppHeaderProps) {
 
   const handlePathnameChange = useCallback(() => {
     if (pathname) {
-      const parts = pathname.split('/').filter(Boolean);
-      let pageName = parts[parts.length - 1] || 'dashboard';
+      const parts = pathname.split("/").filter(Boolean);
+      let pageName = parts[parts.length - 1] || "dashboard";
       pageName = pageName
         .split(/[-_]/)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
       setActivePage(pageName);
     }
   }, [pathname]);
@@ -69,10 +79,9 @@ export default function AppHeader({ user }: AppHeaderProps) {
     handlePathnameChange();
   }, [handlePathnameChange]);
 
-
   const handleLogout = () => {
     signOut({
-      callbackUrl: '/login',
+      callbackUrl: "/login",
     });
   };
 
@@ -93,8 +102,11 @@ export default function AppHeader({ user }: AppHeaderProps) {
         <div className="flex items-center gap-4">
           {/* Search */}
           <div className="hidden md:flex w-[350px] mx-4 relative">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative w-full max-w-md">
+              {/* Search Icon */}
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+
+              {/* Input Field */}
               <Input
                 ref={searchInputRef}
                 placeholder="Search..."
@@ -102,15 +114,24 @@ export default function AppHeader({ user }: AppHeaderProps) {
                 onChange={handleSearchChange}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
-                className="rounded-sm pl-10 focus-visible:ring-primary/50"
+                className="pl-10 pr-20 border border-input bg-background focus-visible:ring-2 focus-visible:ring-primary/40 transition-all"
               />
+
+              {/* Clear (X) Button */}
               {searchQuery && (
                 <X
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground cursor-pointer"
                   onClick={clearSearch}
+
                 />
               )}
+
+              {/* Microphone Button */}
+              <Microphone 
+                setText={setMicrophoneTranscript} 
+                className="absolute right-3 top-1/2 -translate-y-1/2 " 
+              />
             </div>
+
 
             {/* Search Results Dropdown */}
             {searchOpen && searchQuery && (
@@ -169,15 +190,19 @@ export default function AppHeader({ user }: AppHeaderProps) {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4"> 
+        <div className="flex items-center gap-4">
           {/* Notifications with dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-accent">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative hover:bg-accent"
+              >
                 <Bell className="w-5 h-5" />
-                  <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center">
-                    3
-                  </Badge>
+                <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center">
+                  3
+                </Badge>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -207,7 +232,7 @@ export default function AppHeader({ user }: AppHeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 p-2">
                 <Avatar className="size-8">
-                  <AvatarImage src={user?.image ?? ''} alt={user?.name ?? ''} />
+                  <AvatarImage src={user?.image ?? ""} alt={user?.name ?? ""} />
                   <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-start text-sm">

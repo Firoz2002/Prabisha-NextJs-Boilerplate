@@ -1,5 +1,5 @@
 // auth.ts
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { AuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';

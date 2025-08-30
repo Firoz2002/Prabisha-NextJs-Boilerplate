@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -33,6 +32,12 @@ enum Language {
   HI
   FR
   ES
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  USER
 }
 
 model Account {
@@ -70,17 +75,16 @@ model Session {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
+  id            String    @id @default(cuid())
+  email         String    @unique
   name          String?
   image         String?
   password      String?
-  roleId        String?
-  role          Role?    @relation(fields: [roleId], references: [id])
+  role          Role      @default(USER)   // simplified role
   emailVerified DateTime?
   language      Language? @default(EN)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   blogs         Blog[]
   uploads       Media[]
@@ -91,8 +95,8 @@ model User {
 }
 
 model Theme {
-  id              String   @id @default(cuid())
-  themeName       String
+  id              String    @id @default(cuid())
+  themeName       String    @unique
   primaryColor    String
   secondaryColor  String
   tertiaryColor   String
@@ -102,8 +106,8 @@ model Theme {
   backgroundColor String?
   textColor       String?
   mode            ThemeMode @default(LIGHT)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model HeaderItem {
@@ -128,15 +132,52 @@ model SubHeaderItem {
   headerItem      HeaderItem @relation(fields: [headerItemId], references: [id])
 }
 
+model SidebarGroup {
+  id        String        @id @default(cuid())
+  title     String
+  position  Int
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  items      SidebarItem[]
+  roleAccess SidebarGroupAccess[]
+}
+
 model SidebarItem {
-  id              String   @id @default(cuid())
-  label           String
-  href            String
-  icon            String?
-  position        Int
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String        @id @default(cuid())
+  label          String
+  href           String
+  icon           String?
+  position       Int
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  sidebarGroupId String
+  sidebarGroup   SidebarGroup  @relation(fields: [sidebarGroupId], references: [id], onDelete: Cascade)
+
+  roleAccess SidebarItemAccess[]
+}
+
+model SidebarGroupAccess {
+  role         Role
+  sidebarGroupId String
+  hasAccess    Boolean @default(true)
+  sidebarGroup SidebarGroup @relation(fields: [sidebarGroupId], references: [id], onDelete: Cascade)
+
+  @@id([role, sidebarGroupId])
+  @@index([sidebarGroupId])
+}
+
+model SidebarItemAccess {
+  role        Role
+  sidebarItemId String
+  hasAccess   Boolean @default(true)
+  sidebarItem SidebarItem @relation(fields: [sidebarItemId], references: [id], onDelete: Cascade)
+
+  @@id([role, sidebarItemId])
+  @@index([sidebarItemId])
 }
 
 model CarouselItem {
@@ -191,36 +232,26 @@ model UserSubscription {
   @@index([userId, status]) 
 }
 
-model Role {
-  id          String           @id @default(cuid())
-  name        String           @unique
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  pageAccess  RolePageAccess[]
-  users       User[]
-}
-
 model Pages {
-  id          String           @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  path        String           @unique
+  path        String   @unique
   slug        String
   displayName String
-  isProtected Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  isProtected Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   roleAccess  RolePageAccess[]
 }
 
 model RolePageAccess {
-  roleId    String
-  pageId    String
-  hasAccess Boolean @default(true)
-  page      Pages   @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  role      Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role        Role
+  pageId      String
+  hasAccess   Boolean  @default(true)
+  page        Pages    @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
-  @@id([roleId, pageId])
-  @@index([pageId], map: "RolePageAccess_pageId_fkey")
+  @@id([role, pageId]) // composite primary key
+  @@index([pageId])
 }
 
 model Blog {

@@ -10,7 +10,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (status === "authenticated" && session) {
-      if(session.user.role === "ADMIN") {
+      if(session.user.role === "SUPERADMIN") {
+        router.push('/super-admin/site-settings/theme');
+      } else if(session.user.role === "ADMIN") {
         router.push('/admin/dashboard');
       } else {
         router.push('/user/dashboard');
